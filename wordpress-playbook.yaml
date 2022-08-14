@@ -1,0 +1,58 @@
+---
+- name:  "Deploy WordPress"
+  hosts: wp_host
+  tasks:
+    -
+      name:  "Install httpd"
+      become: yes
+      become_method: sudo
+      yum: 
+        name: "{{ item }}"
+        state: latest
+        update_cache: yes
+      with_list: 
+         - httpd
+         - ghostscript
+         - php-fpm
+         - php-bcmath
+         - php-curl
+         - php-intl
+         - php-json
+         - php-mbstring
+         - php-mysql
+         - php-xml
+         - php-zip 
+         - tar
+    - 
+      name: "install php7.4"
+      become: yes
+      become_method: sudo
+      command: "amazon-linux-extras install -y php7.4"
+    -
+      name:  "Permissions for directorie"
+      become: yes
+      become_method: sudo
+      command: "chmod 755 /var/www/html"
+    -
+      name:  "download"
+      unarchive:
+        src: https://wordpress.org/latest.tar.gz
+        dest: "/home/ec2-user"
+        remote_src: yes
+    - 
+      name:  "copy"
+      become: yes
+      become_method: sudo
+      command: "cp -r /home/ec2-user/wordpress/. /var/www/html"
+    -
+      name: Set up wp-config
+      become: yes
+      become_method: sudo
+      template:
+        src: "wp-config.php"
+        dest: "/var/www/html/wp-config.php"
+    -
+      name:  "restart httpd"
+      become: yes
+      become_method: sudo
+      command: "systemctl restart httpd"
